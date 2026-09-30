@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Para Dani 💛</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0a0e;
+      --orange-track: #ff5500;
+      --blue-electric: #00e5ff;
+      --yellow-fire: #ffcc00;
+      --glass-bg: rgba(20, 20, 30, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --font-main: -apple-system, BlinkMacSystemFont, 'Inter', Roboto, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      font-family: var(--font-main);
+      color: #ffffff;
+      touch-action: manipulation;
+    }
+
+    #app-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 20%, #0d1b2a 0%, #0a0a0e 80%);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .particle-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .top-bar {
+      position: absolute;
+      top: env(safe-area-inset-top, 16px);
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .badge {
+      background: rgba(0, 229, 255, 0.12);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--blue-electric);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: var(--blue-electric);
+      text-transform: uppercase;
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: white;
+      transition: transform 0.15s ease;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.9);
+    }
+
+    #toast {
+      position: absolute;
+      top: calc(env(safe-area-inset-top, 16px) + 50px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: rgba(255, 85, 0, 0.95);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: 0 8px 20px rgba(255, 85, 0, 0.4);
+      z-index: 30;
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+      opacity: 0;
+      text-align: center;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .scene {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: env(safe-area-inset-top, 20px) 20px env(safe-area-inset-bottom, 20px);
+      transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .scene.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.95);
+    }
+
+    .game-header {
+      margin-top: 60px;
+      text-align: center;
+      z-index: 5;
+    }
+
+    .game-header h1 {
+      font-size: 26px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 30%, var(--yellow-fire));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+
+    .game-header p {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      margin: 10px 0;
+    }
+
+    #gameCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 5;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      padding: 16px;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .color-selector {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .color-selector span {
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .color-options {
+      display: flex;
+      gap: 10px;
+    }
+
+    .color-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .color-dot.active {
+      transform: scale(1.15);
+      border-color: #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    }
+
+    .launch-btn-container {
+      position: relative;
+    }
+
+    .launch-btn {
+      width: 100%;
+      height: 54px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--orange-track), #ff2200);
+      color: white;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      box-shadow: 0 6px 20px rgba(255, 85, 0, 0.4);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .launch-btn:active {
+      transform: scale(0.98);
+    }
+
+    .power-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--yellow-fire), #ffffff);
+      opacity: 0.35;
+      pointer-events: none;
+      transition: width 0.05s linear;
+    }
+
+    .skip-btn {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 12px;
+      text-align: center;
+      padding: 4px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .scene-reveal {
+      align-items: center;
+      justify-content: center;
+      perspective: 1000px;
+    }
+
+    .toy-package {
+      width: 280px;
+      height: 410px;
+      background: linear-gradient(145deg, #121824, #080a10);
+      border-radius: 20px;
+      border: 1px solid rgba(0, 225, 255, 0.3);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(0, 229, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.1s ease-out;
+      cursor: pointer;
+    }
+
+    .toy-package::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 20px;
+      background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.15) 45%, rgba(0,255,255,0.15) 50%, rgba(255,204,0,0.15) 55%, transparent 80%);
+      pointer-events: none;
+      z-index: 5;
+      mix-blend-mode: color-dodge;
+      opacity: 0.7;
+    }
+
+    .package-header {
+      padding: 16px;
+      background: linear-gradient(135deg, var(--blue-electric), #0055ff);
+      border-top-left-radius: 19px;
+      border-top-right-radius: 19px;
+      border-bottom: 2px solid var(--yellow-fire);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .package-brand {
+      font-size: 18px;
+      font-weight: 900;
+      font-style: italic;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .package-tag {
+      background: var(--yellow-fire);
+      color: #000;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+    }
+
+    .blister-bubble {
+      flex: 1;
+      margin: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6), 0 8px 16px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .blister-bubble.opened {
+      border-style: dashed;
+      border-color: var(--yellow-fire);
+    }
+
+    .toy-car-display {
+      width: 180px;
+      height: 90px;
+      filter: drop-shadow(0 12px 8px rgba(0,0,0,0.7));
+    }
+
+    .stats-grid {
+      width: 100%;
+      padding: 0 16px 16px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat-item {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .stat-label {
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .stat-val {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--yellow-fire);
+    }
+
+    .btn-open-card {
+      margin-top: 24px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+      padding: 14px 28px;
+      border-radius: 30px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .btn-open-card:active {
+      transform: scale(0.95);
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .sheet-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+
+    .sheet-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .letter-sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      max-height: 85%;
+      background: rgba(18, 20, 28, 0.96);
+      border-top-left-radius: 28px;
+      border-top-right-radius: 28px;
+      border: 1px solid var(--glass-border);
+      padding: 24px;
+      z-index: 50;
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -10px 40px rgba(0,0,0,0.8);
+      overflow-y: auto;
+    }
+
+    .sheet-overlay.active .letter-sheet {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 3px;
+      margin: 0 auto 20px;
+    }
+
+    /* ✏️ SECCIÓN DE TEXTOS DE LA CARTA */
+    .letter-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--yellow-fire);
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .letter-body {
+      font-size: 15px;
+      line-height: 1.6;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 24px;
+      outline: none;
+      white-space: pre-line;
+    }
+
+    .letter-signature {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--blue-electric);
+      text-align: right;
+      font-style: italic;
+    }
+
+    .close-sheet-btn {
+      margin-top: auto;
+      padding-top: 16px;
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="app-container">
+    <canvas id="effectsCanvas" class="particle-canvas"></canvas>
+
+    <div class="top-bar">
+      <!-- ✏️ INSIGNIA SUPERIOR -->
+      <div class="badge">Para Dani 💛 • 1 de 1</div>
+      <button class="icon-btn" id="muteBtn" aria-label="Silenciar sonido">
+        <svg id="soundIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+        </svg>
+      </button>
+    </div>
+
+    <div id="toast">¡Acelera a fondo!</div>
+
+    <!-- ESCENA 1: MINI-JUEGO -->
+    <section id="scene1" class="scene">
+      <div class="game-header">
+        <!-- ✏️ TÍTULO Y SUBTÍTULO DEL JUEGO -->
+        <h1>Desafío Turbo Loop 🏎️💨</h1>
+        <p>Mantén presionado para cargar el nitro y suelta</p>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="gameCanvas"></canvas>
+      </div>
+
+      <div class="controls-panel">
+        <div class="color-selector">
+          <span>Color del Auto:</span>
+          <div class="color-options">
+            <div class="color-dot active" data-color="#00e5ff" style="background: #00e5ff;"></div>
+            <div class="color-dot" data-color="#ff5500" style="background: #ff5500;"></div>
+            <div class="color-dot" data-color="#ffcc00" style="background: #ffcc00;"></div>
+            <div class="color-dot" data-color="#cc00ff" style="background: #cc00ff;"></div>
+          </div>
+        </div>
+
+        <div class="launch-btn-container">
+          <button id="launchBtn" class="launch-btn">
+            <div id="powerFill" class="power-fill"></div>
+            <span id="launchText">MANTÉN PRESIONADO</span>
+          </button>
+        </div>
+
+        <button id="skipBtn" class="skip-btn">Saltar al regalo ➔</button>
+      </div>
+    </section>
+
+    <!-- ESCENA 2: EMPAQUE REVELACIÓN -->
+    <section id="scene2" class="scene scene-reveal hidden">
+      <div id="toyPackage" class="toy-package">
+        <div class="package-header">
+          <!-- ✏️ NOMBRE DEL EMPAQUE Y EDICIÓN -->
+          <div class="package-brand">DANI 💛</div>
+          <div class="package-tag">SPECIAL 1/1</div>
+        </div>
+
+        <div id="blisterBubble" class="blister-bubble">
+          <svg id="carSvgDisplay" class="toy-car-display" viewBox="0 0 120 60"></svg>
+        </div>
+
+        <!-- ✏️ ESTADÍSTICAS GRACIOSAS -->
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-label">Copiloto</div>
+            <div class="stat-val">Andi 💛</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Sonrisas/km</div>
+            <div class="stat-val">Incalculable</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Velocidad</div>
+            <div class="stat-val">Puro Amor ⚡</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-label">Sintonía</div>
+            <div class="stat-val">100% Perfecta</div>
+          </div>
+        </div>
+      </div>
+
+      <button id="openCardBtn" class="btn-open-card">
+        <span>Ver carta</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      </button>
+    </section>
+
+    <!-- OVERLAY Y CARTA FLOTANTE -->
+    <div id="sheetOverlay" class="sheet-overlay">
+      <div id="letterSheet" class="letter-sheet">
+        <div class="sheet-handle"></div>
+        
+        <!-- ✏️ TITULO, MENSAJE Y FIRMA DE LA CARTA -->
+        <h2 class="letter-title" contenteditable="true">Para mi piloto favorito💛</h2>
+        
+        <p class="letter-body" contenteditable="true">No importa qué tan largo sea el camino o qué curvas nos ponga la vida, lo único que sé es que me encanta recorrerlo a tu lado.
+
+Espero que estos carritos te saquen una gran sonrisa, así como tú me la sacas a mí a diario. ¡Te amo! 🏎️💨</p>
+        
+        <div class="letter-signature" contenteditable="true">con todo mi amor💛</div>
+
+        <button id="closeSheetBtn" class="close-sheet-btn">Desliza hacia abajo para cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- WEB AUDIO API SYSTEM ---
+    class AudioSystem {
+      constructor() {
+        this.ctx = null;
+        this.isMuted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+      }
+
+      playEngineSound(pitch = 100) {
+        if (this.isMuted || !this.ctx) return;
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(pitch, this.ctx.currentTime);
+          
+          gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.1);
+          
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.1);
+        } catch(e) {}
+      }
+
+      playVictorySound() {
+        if (this.isMuted || !this.ctx) return;
+        try {
+          const notes = [261.63, 329.63, 392.00, 523.25];
+          notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + (idx * 0.12));
+            
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime + (idx * 0.12));
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + (idx * 0.12) + 0.3);
+            
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            
+            osc.start(this.ctx.currentTime + (idx * 0.12));
+            osc.stop(this.ctx.currentTime + (idx * 0.12) + 0.3);
+          });
+        } catch(e) {}
+      }
+    }
+
+    const audio = new AudioSystem();
+
+    const muteBtn = document.getElementById('muteBtn');
+    muteBtn.addEventListener('click', () => {
+      audio.isMuted = !audio.isMuted;
+      muteBtn.style.opacity = audio.isMuted ? '0.4' : '1';
+    });
+
+    const toast = document.getElementById('toast');
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function triggerVibrate(pattern = 50) {
+      if (navigator.vibrate) {
+        try { navigator.vibrate(pattern); } catch(e){}
+      }
+    }
+
+    // --- CANVAS DE PARTÍCULAS (CONFETI) ---
+    const particleCanvas = document.getElementById('effectsCanvas');
+    const pCtx = particleCanvas.getContext('2d');
+    let particles = [];
+
+    function resizeParticleCanvas() {
+      particleCanvas.width = particleCanvas.offsetWidth;
+      particleCanvas.height = particleCanvas.offsetHeight;
+    }
+    window.addEventListener('resize', resizeParticleCanvas);
+    resizeParticleCanvas();
+
+    function createConfetti() {
+      const colors = ['#00e5ff', '#ff5500', '#ffcc00', '#ffffff', '#ff0055'];
+      for (let i = 0; i < 65; i++) {
+        particles.push({
+          x: particleCanvas.width / 2,
+          y: particleCanvas.height / 2,
+          vx: (Math.random() - 0.5) * 12,
+          vy: (Math.random() - 0.8) * 14,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          size: Math.random() * 6 + 4,
+          rotation: Math.random() * 360,
+          vRot: (Math.random() - 0.5) * 10,
+          life: 1
+        });
+      }
+    }
+
+    function updateParticles() {
+      pCtx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.3;
+        p.life -= 0.015;
+        p.rotation += p.vRot;
+
+        pCtx.save();
+        pCtx.translate(p.x, p.y);
+        pCtx.rotate((p.rotation * Math.PI) / 180);
+        pCtx.fillStyle = p.color;
+        pCtx.globalAlpha = Math.max(0, p.life);
+        pCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        pCtx.restore();
+
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+      requestAnimationFrame(updateParticles);
+    }
+    updateParticles();
+
+    // --- CANVAS DEL MINI-JUEGO Y FÍSICA ---
+    const gameCanvas = document.getElementById('gameCanvas');
+    const gCtx = gameCanvas.getContext('2d');
+
+    let selectedColor = '#00e5ff';
+    let isCharging = false;
+    let power = 0;
+    let chargeInterval = null;
+    let gameState = 'idle';
+
+    let carProgress = 0;
+    let carSpeed = 0;
+
+    function resizeGameCanvas() {
+      gameCanvas.width = gameCanvas.offsetWidth;
+      gameCanvas.height = gameCanvas.offsetHeight;
+    }
+    window.addEventListener('resize', resizeGameCanvas);
+    resizeGameCanvas();
+
+    function drawCarOnCanvas(ctx, x, y, angle, color) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(-16, -8, 32, 14, 4);
+      ctx.fill();
+
+      ctx.fillStyle = '#111';
+      ctx.fillRect(-4, -6, 12, 10);
+
+      ctx.fillStyle = '#222';
+      ctx.beginPath();
+      ctx.arc(-10, -8, 4, 0, Math.PI * 2);
+      ctx.arc(10, -8, 4, 0, Math.PI * 2);
+      ctx.arc(-10, 6, 4, 0, Math.PI * 2);
+      ctx.arc(10, 6, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function renderGameScreen() {
+      gCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+      const w = gameCanvas.width;
+      const h = gameCanvas.height;
+      const groundY = h - 40;
+      const loopRadius = 55;
+      const loopCenterX = w * 0.55;
+      const loopCenterY = groundY - loopRadius;
+
+      gCtx.strokeStyle = '#ff5500';
+      gCtx.lineWidth = 10;
+      gCtx.lineCap = 'round';
+
+      gCtx.beginPath();
+      gCtx.moveTo(20, groundY);
+      gCtx.lineTo(loopCenterX, groundY);
+      gCtx.stroke();
+
+      gCtx.beginPath();
+      gCtx.arc(loopCenterX, loopCenterY, loopRadius, Math.PI / 2, -Math.PI * 1.5, false);
+      gCtx.stroke();
+
+      gCtx.beginPath();
+      gCtx.moveTo(loopCenterX, groundY);
+      gCtx.lineTo(w - 20, groundY);
+      gCtx.stroke();
+
+      gCtx.fillStyle = '#ffffff';
+      gCtx.fillRect(w - 30, groundY - 25, 4, 20);
+      gCtx.fillStyle = '#ffcc00';
+      gCtx.fillRect(w - 26, groundY - 25, 12, 10);
+
+      let carX = 20;
+      let carY = groundY - 6;
+      let angle = 0;
+
+      if (carProgress <= 0.3) {
+        const t = carProgress / 0.3;
+        carX = 20 + t * (loopCenterX - 20);
+        carY = groundY - 6;
+        angle = 0;
+      } else if (carProgress <= 0.8) {
+        const t = (carProgress - 0.3) / 0.5;
+        const loopAngle = Math.PI / 2 + t * Math.PI * 2;
+        carX = loopCenterX + Math.cos(loopAngle) * loopRadius;
+        carY = loopCenterY + Math.sin(loopAngle) * loopRadius;
+        angle = loopAngle + Math.PI / 2;
+      } else {
+        const t = (carProgress - 0.8) / 0.2;
+        carX = loopCenterX + t * (w - 20 - loopCenterX);
+        carY = groundY - 6;
+        angle = 0;
+      }
+
+      drawCarOnCanvas(gCtx, carX, carY, angle, selectedColor);
+
+      if (gameState === 'running') {
+        carProgress += carSpeed;
+        audio.playEngineSound(150 + carSpeed * 2000);
+
+        if (carProgress > 0.55 && carProgress < 0.7 && power < 70) {
+          gameState = 'failed';
+          showToast('¡Faltó potencia! Intenta de nuevo 💥');
+          triggerVibrate([100, 50, 100]);
+          setTimeout(resetGame, 1500);
+        }
+
+        if (carProgress >= 1.0) {
+          gameState = 'success';
+          audio.playVictorySound();
+          createConfetti();
+          showToast('¡Nivel superado! 🏆');
+          triggerVibrate(200);
+          setTimeout(transitionToScene2, 1200);
+        }
+      }
+
+      requestAnimationFrame(renderGameScreen);
+    }
+    renderGameScreen();
+
+    function resetGame() {
+      gameState = 'idle';
+      carProgress = 0;
+      power = 0;
+      document.getElementById('powerFill').style.width = '0%';
+      document.getElementById('launchText').textContent = 'MANTÉN PRESIONADO';
+    }
+
+    const launchBtn = document.getElementById('launchBtn');
+    const powerFill = document.getElementById('powerFill');
+
+    function startCharging(e) {
+      if (gameState !== 'idle') return;
+      e.preventDefault();
+      audio.init();
+      isCharging = true;
+      power = 0;
+      
+      chargeInterval = setInterval(() => {
+        if (!isCharging) return;
+        power = Math.min(power + 3, 100);
+        powerFill.style.width = power + '%';
+        audio.playEngineSound(80 + power * 2);
+        triggerVibrate(10);
+      }, 30);
+    }
+
+    function releaseLaunch(e) {
+      if (!isCharging || gameState !== 'idle') return;
+      e.preventDefault();
+      isCharging = false;
+      clearInterval(chargeInterval);
+
+      if (power < 15) {
+        showToast('¡Mantén presionado para cargar nitro!');
+        resetGame();
+        return;
+      }
+
+      gameState = 'running';
+      carSpeed = 0.005 + (power / 100) * 0.025;
+      document.getElementById('launchText').textContent = '¡EN PISTA!';
+    }
+
+    launchBtn.addEventListener('mousedown', startCharging);
+    launchBtn.addEventListener('touchstart', startCharging);
+    window.addEventListener('mouseup', releaseLaunch);
+    window.addEventListener('touchend', releaseLaunch);
+
+    document.querySelectorAll('.color-dot').forEach(dot => {
+      dot.addEventListener('click', (e) => {
+        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+        e.target.classList.add('active');
+        selectedColor = e.target.getAttribute('data-color');
+        updateDisplayCarSvg();
+      });
+    });
+
+    function updateDisplayCarSvg() {
+      const svg = document.getElementById('carSvgDisplay');
+      svg.innerHTML = `
+        <rect x="15" y="25" width="90" height="22" rx="8" fill="${selectedColor}" />
+        <path d="M 35 25 L 48 12 L 80 12 L 88 25 Z" fill="#111827" />
+        <circle cx="35" cy="48" r="10" fill="#222" stroke="#444" stroke-width="3" />
+        <circle cx="85" cy="48" r="10" fill="#222" stroke="#444" stroke-width="3" />
+        <path d="M 90 32 L 102 32" stroke="${selectedColor}" stroke-width="4" stroke-linecap="round" />
+      `;
+    }
+    updateDisplayCarSvg();
+
+    document.getElementById('skipBtn').addEventListener('click', () => {
+      audio.init();
+      transitionToScene2();
+    });
+
+    // --- REVELACIÓN Y EFECTO 3D ---
+    function transitionToScene2() {
+      document.getElementById('scene1').classList.add('hidden');
+      setTimeout(() => {
+        document.getElementById('scene2').classList.remove('hidden');
+        createConfetti();
+      }, 400);
+    }
+
+    const toyPackage = document.getElementById('toyPackage');
+    
+    function handleTilt(e) {
+      const rect = toyPackage.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
+      const x = clientX - rect.left - rect.width / 2;
+      const y = clientY - rect.top - rect.height / 2;
+      
+      const rotateX = (-y / rect.height) * 20;
+      const rotateY = (x / rect.width) * 20;
+
+      toyPackage.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+    }
+
+    function resetTilt() {
+      toyPackage.style.transform = `rotateX(0deg) rotateY(0deg)`;
+    }
+
+    toyPackage.addEventListener('mousemove', handleTilt);
+    toyPackage.addEventListener('mouseleave', resetTilt);
+    toyPackage.addEventListener('touchmove', handleTilt);
+    toyPackage.addEventListener('touchend', resetTilt);
+
+    const blister = document.getElementById('blisterBubble');
+    blister.addEventListener('click', () => {
+      blister.classList.toggle('opened');
+      triggerVibrate(40);
+      showToast(blister.classList.contains('opened') ? '¡Edición Abierta! 🏎️' : 'Edición 1 de 1 Sellada');
+    });
+
+    // --- CARTA FLOTANTE ---
+    const sheetOverlay = document.getElementById('sheetOverlay');
+    const openCardBtn = document.getElementById('openCardBtn');
+    const closeSheetBtn = document.getElementById('closeSheetBtn');
+
+    openCardBtn.addEventListener('click', () => {
+      sheetOverlay.classList.add('active');
+      triggerVibrate(50);
+      createConfetti();
+    });
+
+    function closeSheet() {
+      sheetOverlay.classList.remove('active');
+    }
+
+    closeSheetBtn.addEventListener('click', closeSheet);
+    sheetOverlay.addEventListener('click', (e) => {
+      if (e.target === sheetOverlay) closeSheet();
+    });
+
+    let touchStartY = 0;
+    const letterSheet = document.getElementById('letterSheet');
+
+    letterSheet.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+    });
+
+    letterSheet.addEventListener('touchmove', (e) => {
+      const touchCurrentY = e.touches[0].clientY;
+      if (touchCurrentY - touchStartY > 80) {
+        closeSheet();
+      }
+    });
+  </script>
+</body>
+</html>
